@@ -12,6 +12,8 @@ import { BadRequestException } from "./utils/appError";
 import "./config/passport.config";
 import passport from "passport";
 import authRoutes from "./routes/auth.route";
+import userRoutes from "./routes/user.route";
+import isAuthenticated from "./middlewares/isAuthenticated.middleware";
 
 const app = express();
 const BASE_PATH = config.BASE_PATH
@@ -46,6 +48,7 @@ app.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunction
 }));
 
 app.use(`${BASE_PATH}/auth`, authRoutes);
+app.use(`${BASE_PATH}/user`, isAuthenticated , userRoutes);
 
 app.use(errorHandler)
 
