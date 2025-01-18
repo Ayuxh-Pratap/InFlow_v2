@@ -6,7 +6,8 @@ import { Roles } from "../enums/role.enum";
 import RoleModel from "../models/roles-permission.model";
 import MemberModel from "../models/member.model";
 import { ProviderEnum } from "../enums/account-provider.enum";
-import { BadRequestException, NotFoundException } from "../utils/appError";
+import { BadRequestException, NotFoundException, UnauthorizedException } from "../utils/appError";
+import { emailSchema } from "../validation/auth.validation";
 
 export const loginOrCreateAccountService = async (
     data: {
@@ -164,3 +165,30 @@ export const registerUserService = async (body: {
         throw error;
     }
 };
+
+export const verifyUserService = async({
+    email,
+    password,
+    provider =  ProviderEnum.EMAIL
+}: {
+    email: string;
+    password: string;
+    provider?: string;
+}) => {
+    const account = await AccountModel.findOne({ provider, providerId: email });
+    if (!account) {
+        throw new NotFoundException("Invalid credentials");
+    }
+
+    const user = await UserModel.findById( account.userId );
+    if (!user) {
+        throw new NotFoundException("User not found");
+    }
+
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+        throw new UnauthorizedException("Invalid credentials");
+    }
+
+    return user.omitPassword();
+}
