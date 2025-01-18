@@ -1,9 +1,10 @@
 import passport from "passport";
 import { Request } from "express";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import { Strategy as LocalStrategy } from "passport-local";
 import { config } from "./app.config";
 import { ProviderEnum } from "../enums/account-provider.enum";
-import { loginOrCreateAccountService } from "../services/auth.service";
+import { loginOrCreateAccountService, verifyUserService } from "../services/auth.service";
 
 passport.use(new GoogleStrategy({
     clientID: config.GOOGLE_CLIENT_ID,
@@ -40,6 +41,26 @@ passport.use(new GoogleStrategy({
     }
 
 ));
+
+passport.use(
+    new LocalStrategy(
+        {
+            usernameField: "email",
+            passwordField: "password",
+            session: true,
+        },
+        async (email: string, password: string, done) => {
+            try {
+                const user = await verifyUserService({
+                    email,
+                    password,
+                });
+                return done(null, user);
+            } catch (error) {
+                return done(error, false, { message: "Invalid email or password" });
+            }
+        }
+    ))
 
 passport.serializeUser((user: any, done) => {
     done(null, user);
