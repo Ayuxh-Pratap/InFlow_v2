@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
-import { createWorkspaceSchema } from "../validation/workspace.validation";
+import { createWorkspaceSchema, workspaceIdSchema } from "../validation/workspace.validation";
 import { HTTPSTATUS } from "../config/http.config";
-import { createWorkspaceService, getAllWorkspacesUserIsMemberService } from "../services/workspace.service";
+import { createWorkspaceService, getAllWorkspacesUserIsMemberService, getWorkspaceByIdService } from "../services/workspace.service";
+import { getMemberRoleInWorkspaceService } from "../services/member.service";
 
 export const createWorkspaceController = asyncHandler(
     async (
@@ -21,9 +22,9 @@ export const createWorkspaceController = asyncHandler(
     });
 
 export const getAllWorkspaceUserIsMemberController = asyncHandler(
-    async(
-        req : Request,
-        res : Response,
+    async (
+        req: Request,
+        res: Response,
     ) => {
         const userId = req.user?._id;
 
@@ -31,6 +32,25 @@ export const getAllWorkspaceUserIsMemberController = asyncHandler(
         return res.status(HTTPSTATUS.OK).json({
             message: "Workspaces fetched successfully",
             workspaces
+        })
+    }
+)
+
+export const getWorkspaceByIdController = asyncHandler(
+    async (
+        req: Request,
+        res: Response,
+    ) => {
+        const workspaceId = workspaceIdSchema.parse(req.params.workspaceId)
+
+        const userId = req.user?._id;
+        
+        await getMemberRoleInWorkspaceService(userId, workspaceId)
+
+        const { workspace } = await getWorkspaceByIdService(workspaceId)
+        return res.status(HTTPSTATUS.OK).json({
+            message: "Workspace fetched successfully",
+            workspace
         })
     }
 )
