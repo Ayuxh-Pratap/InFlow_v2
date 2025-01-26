@@ -88,3 +88,33 @@ export const getWorkspaceByIdService =
             workspace: workspaceWithMembers
         }
     }
+
+export const getWorkspaceMembersController =
+    async (
+        workspaceId: string
+    ) => {
+        const members = await MemberModel.find({ workspaceId })
+            .populate("userId", "name email")
+            .populate("role")
+
+        return {
+            members
+        }
+    }
+
+export const getWorkspaceMembersService =
+    async (
+        workspaceId: string
+    ) => {
+        const members = await MemberModel.find({ workspaceId })
+            .populate("userId", "name email profilePicture -password")
+            .populate("role", "name")
+
+        const roles = await RoleModel.find({}, { name: 1, _id: 1 })
+            .select("-permissions").lean()
+
+        return {
+            members,
+            roles
+        }
+    }
