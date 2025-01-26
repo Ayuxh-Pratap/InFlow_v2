@@ -150,3 +150,36 @@ export const getWorkspaceAnalyticsService =
 
         return { analytics }
     }
+
+export const changeMemberRoleService =
+    async (
+        memberId: string,
+        roleId: string,
+        workspaceId: string
+    ) => {
+        const workspace = await WorkspaceModel.findById(workspaceId)
+
+        if (!workspace) {
+            throw new NotFoundException("Workspace not found");
+        }
+
+        const role = await RoleModel.findById(roleId)
+
+        if (!role) {
+            throw new NotFoundException("Role not found");
+        }
+
+        const member = await MemberModel.findOne({
+            userId: memberId,
+            workspaceId: workspaceId
+        })
+
+        if (!member) {
+            throw new NotFoundException("Member not found");
+        }
+
+        member.role = role
+        await member.save()
+
+        return { member }
+    }
